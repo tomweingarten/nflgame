@@ -31,7 +31,7 @@ nflgame-update-players
 ```
 
 ### Documentation and getting help
-If you need help, please come visit us in discord on channel `https://discord.gg/G7uay2`.
+If you need help, please come visit us in discord on channel `https://discord.gg/3cHXbRp`.
 
 If you aren't a programmer, then the
 [tutorial for non
