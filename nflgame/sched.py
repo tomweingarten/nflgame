@@ -2,6 +2,7 @@ from collections import OrderedDict
 import datetime
 import json
 import os.path
+from os import environ
 
 __pdoc__ = {}
 
@@ -69,29 +70,30 @@ def _create_schedule(jsonf=None):
         sched[gsis_id] = info
     last_updated = datetime.datetime.utcfromtimestamp(data.get('time', 0))
 
-    if (datetime.datetime.utcnow() - last_updated).total_seconds() >= day:
-        # Only try to update if we can write to the schedule file.
-        if os.access(jsonf, os.W_OK):
-            import nflgame.live
-            import nflgame.update_sched
-            year, week = nflgame.live.current_year_and_week()
-            phase = nflgame.live._cur_season_phase
-            current_week = (year, phase, week)
+    if not environ.get('NFLGAME_SKIP_UPDATE').lower() == 'true':
+        if (datetime.datetime.utcnow() - last_updated).total_seconds() >= day:
+            # Only try to update if we can write to the schedule file.
+            if os.access(jsonf, os.W_OK):
+                import nflgame.live
+                import nflgame.update_sched
+                year, week = nflgame.live.current_year_and_week()
+                phase = nflgame.live._cur_season_phase
+                current_week = (year, phase, week)
 
-            missing_weeks = check_missing_weeks(sched, year, phase)
-            weeks_to_update = order_weeks_to_update(missing_weeks, current_week)
+                missing_weeks = check_missing_weeks(sched, year, phase)
+                weeks_to_update = order_weeks_to_update(missing_weeks, current_week)
 
-            for week_to_update in weeks_to_update:
-                print(('Updating {}').format(week_to_update))
-                year, phase, week = week_to_update
-                week_was_updated = nflgame.update_sched.update_week(sched, year, phase, week)
-                if not week_was_updated:
-                    print(("Week {}{} of {} was either empty, or it couldn't be fetched from NFL.com. Aborting.")\
-                        .format(phase , week, year))
-                    break
+                for week_to_update in weeks_to_update:
+                    print(('Updating {}').format(week_to_update))
+                    year, phase, week = week_to_update
+                    week_was_updated = nflgame.update_sched.update_week(sched, year, phase, week)
+                    if not week_was_updated:
+                        print(("Week {}{} of {} was either empty, or it couldn't be fetched from NFL.com. Aborting.")\
+                            .format(phase , week, year))
+                        break
 
-            nflgame.update_sched.write_schedule(jsonf, sched)
-            last_updated = datetime.datetime.utcnow()
+                nflgame.update_sched.write_schedule(jsonf, sched)
+                last_updated = datetime.datetime.utcnow()
 
     return sched, last_updated
 
