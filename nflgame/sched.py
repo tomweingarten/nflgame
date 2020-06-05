@@ -70,7 +70,7 @@ def _create_schedule(jsonf=None):
         sched[gsis_id] = info
     last_updated = datetime.datetime.utcfromtimestamp(data.get('time', 0))
 
-    if not environ.get('NFLGAME_SKIP_UPDATE').lower() == 'true':
+    if not environ.get('NFLGAME_SKIP_UPDATE', '').lower() == 'true':
         if (datetime.datetime.utcnow() - last_updated).total_seconds() >= day:
             # Only try to update if we can write to the schedule file.
             if os.access(jsonf, os.W_OK):
